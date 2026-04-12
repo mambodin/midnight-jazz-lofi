@@ -61,7 +61,6 @@ There are no tests or linting configured. No build step.
 | Midjourney Basic | Thumbnails, manual Sunday batch | $10/mo |
 | Anthropic Claude API | Metadata (title/desc/tags) via Haiku | ~$0.09/mo |
 | Tencent Cloud Lighthouse | VPS Singapore region | $0.84/mo yr1 ($10.08/yr promo) |
-| n8n (self-hosted) | Workflow orchestration | Free |
 | **Total** | | **~$31/mo** |
 
 ## VPS Setup
@@ -71,7 +70,6 @@ There are no tests or linting configured. No build step.
 - **IP:** 129.226.215.31
 - **Project folder:** `~/youtube-pipeline/`
 - **Subfolders:** `scripts/`, `thumbnails/queue/`, `thumbnails/used/`, `output/`, `logs/`
-- **n8n:** Running in Docker on port 5678, `N8N_SECURE_COOKIE=false`
 
 ## Environment Variables (`.env`)
 
@@ -144,7 +142,6 @@ Audio URL field: `data.response.sunoData[0].sourceAudioUrl`
 
 - **sunoapi.org hCaptcha:** "Too many requests" during signup. Fix: complete captcha on mobile data. Alternatives: `udioapi.pro` or `acedata.cloud`.
 - **Kling shaky video:** Fixed with `STATIC CAMERA` prompt prefix + `cfg_scale: 0.3` + negative prompt for all camera movement types.
-- **n8n port 5678:** Required `N8N_SECURE_COOKIE=false`. Container needed `chown -R 1000:1000 ~/.n8n` and `-u 1000:1000`.
 - **YouTube OAuth on VPS:** Used `urn:ietf:wg:oauth:2.0:oob` redirect URI with manual code paste (no browser on VPS).
 
 ## Monetization Strategy
