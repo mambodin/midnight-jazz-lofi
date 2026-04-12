@@ -1,0 +1,22 @@
+# Secrets — never commit these
+.env
+token.json
+client_secret*.json
+
+# Output files — too large for git
+output/
+logs/
+thumbnails/used/
+thumbnails/queue/*.png
+thumbnails/current_thumb.jpg
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# OS
+.DS_Store
+Thumbs.db
