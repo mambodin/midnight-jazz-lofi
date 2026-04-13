@@ -14,14 +14,10 @@ KLING_ACCESS_KEY = os.getenv("KLING_ACCESS_KEY")
 KLING_SECRET_KEY = os.getenv("KLING_SECRET_KEY")
 BASE_URL         = "https://api-singapore.klingai.com"
 
-# Static camera prompts — no shake, locked off tripod
-SCENE_PROMPTS = [
-    "dark rainy Tokyo alleyway at night, neon signs reflecting in wet cobblestone puddles, empty narrow street, dim orange lamplight, gentle rain falling, STATIC CAMERA, locked off tripod shot, no camera movement, only rain particles moving, cinematic still frame, no people",
-    "dimly lit vintage jazz bar interior, empty wooden stage with upright piano and standing microphone, single amber spotlight, cigarette smoke wisps drifting slowly, dark mahogany walls, STATIC CAMERA, locked off tripod shot, no camera movement, only smoke drifting, no people",
-    "dark rain-soaked rooftop overlooking vast neon city at night, wet concrete reflecting city lights, thick fog, lone empty wooden chair, STATIC CAMERA, locked off tripod shot, no camera movement, only rain falling and fog drifting slowly, no people",
-    "late night cafe interior, rain streaking slowly down window glass, warm amber light inside, empty table with coffee cup and open book, blurred neon city lights outside, STATIC CAMERA, locked off tripod shot, no camera movement, only rain on glass moving, no people",
-    "1940s noir detective office at night, single brass desk lamp casting warm light, rain on dark window with venetian blind shadows, whiskey glass on wooden desk, STATIC CAMERA, locked off tripod shot, no camera movement, only rain on window moving, no people"
-]
+_config = json.loads((Path(__file__).parent.parent / "config" / "video_scenes.json").read_text())
+API_PARAMS = _config["api_params"]
+SCENES = _config["scenes"]
+SCENE_PROMPTS = [s["prompt"] for s in SCENES]
 
 
 def generate_jwt():
@@ -47,14 +43,7 @@ def get_headers():
 
 def create_video_task(scene_index):
     prompt = SCENE_PROMPTS[scene_index]
-    payload = {
-        "model_name": "kling-v1-6",
-        "prompt": prompt,
-        "negative_prompt": "camera movement, panning, zooming, tilting, shaking, handheld, dolly, tracking shot, motion blur, unstable, wobble, crane shot, people, faces, text, watermark, blurry, low quality",
-        "cfg_scale": 0.3,
-        "mode": "std",
-        "duration": "5"
-    }
+    payload = {**API_PARAMS, "prompt": prompt}
 
     print(f"\nSubmitting video task (scene {scene_index})...", flush=True)
     print(f"Prompt: {prompt[:80]}...", flush=True)
