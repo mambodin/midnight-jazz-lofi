@@ -1,0 +1,35 @@
+{
+  "api_params": {
+    "model": "V4_5ALL",
+    "instrumental": true,
+    "styleWeight": 0.7,
+    "weirdnessConstraint": 0.3
+  },
+  "styles": [
+    {
+      "style": "Dark Jazz, Lo-Fi",
+      "prompt": "slow dark jazz lofi, brushed snare drums, upright bass, muted trumpet melody, melancholic minor key, vinyl crackle, late night atmosphere, 70bpm",
+      "negativeTags": "upbeat, happy, vocals, singing, pop, electronic, EDM"
+    },
+    {
+      "style": "Lo-Fi Hip Hop, Jazz",
+      "prompt": "rainy night lofi hip-hop jazz, soft piano chords, distant saxophone, vinyl crackle, light rain ambience, 80bpm, melancholic focused mood, warm low-fi production",
+      "negativeTags": "upbeat, fast tempo, vocals, singing, heavy drums, EDM"
+    },
+    {
+      "style": "Cinematic Jazz, Noir",
+      "prompt": "cinematic noir jazz instrumental, brooding double bass, sparse electric guitar, atmospheric piano, slow 65bpm, minor key, 1950s detective film score mood, smoky and dark",
+      "negativeTags": "upbeat, vocals, singing, pop, electronic, fast tempo"
+    },
+    {
+      "style": "Smooth Jazz, Lo-Fi",
+      "prompt": "smooth dark jazz lofi, mid-tempo 90bpm, clean guitar chords, soft upright bass, light percussion brushwork, focused productive mood, dark but not sad, lo-fi texture",
+      "negativeTags": "sad, depressing, vocals, singing, heavy bass, EDM, pop"
+    },
+    {
+      "style": "Winter Jazz, Lo-Fi",
+      "prompt": "winter lofi jazz, cold sparse piano, slow 72bpm, minor key, distant string pads, melancholic mood, snow and silence atmosphere, lo-fi vinyl texture, introspective",
+      "negativeTags": "upbeat, happy, vocals, singing, summer, tropical, EDM"
+    }
+  ]
+}
