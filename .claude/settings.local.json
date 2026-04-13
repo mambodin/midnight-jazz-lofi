@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh root@129.226.215.31 \"docker ps -a --format '{{.Names}}\\\\t{{.Image}}\\\\t{{.Status}}'\")",
+      "Bash(ssh -o StrictHostKeyChecking=accept-new root@129.226.215.31 \"docker ps -a --format '{{.Names}}\\\\t{{.Image}}\\\\t{{.Status}}'\")",
+      "Bash(ssh -o StrictHostKeyChecking=accept-new -i \"H:\\\\My Drive\\\\Development\\\\Claude\\\\youtube\\\\youtube_ubuntu.pem\" ubuntu@129.226.215.31 \"docker ps -a --format '{{.Names}}\\\\t{{.Image}}\\\\t{{.Status}}'\")",
+      "Bash(ssh -i \"H:\\\\My Drive\\\\Development\\\\Claude\\\\youtube\\\\youtube_ubuntu.pem\" ubuntu@129.226.215.31 \"docker stop n8n && docker rm n8n && docker rmi n8nio/n8n && echo '--- containers ---' && docker ps -a && echo '--- images ---' && docker images\")",
+      "Bash(ssh -i \"H:\\\\My Drive\\\\Development\\\\Claude\\\\youtube\\\\youtube_ubuntu.pem\" ubuntu@129.226.215.31 \"ls -la ~/.n8n 2>/dev/null && echo '---exists---' || echo '---not found---'\")",
+      "Bash(ssh -i \"H:\\\\My Drive\\\\Development\\\\Claude\\\\youtube\\\\youtube_ubuntu.pem\" ubuntu@129.226.215.31 \"rm -rf ~/.n8n && echo 'n8n data removed'\")",
+      "Bash(ssh -i \"H:\\\\My Drive\\\\Development\\\\Claude\\\\youtube\\\\youtube_ubuntu.pem\" ubuntu@129.226.215.31 \"crontab -l\")",
+      "Bash(ssh -o ConnectTimeout=10 root@129.226.215.31 \"ls -lt ~/youtube-pipeline/logs/ | head -20\")",
+      "Bash(ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@129.226.215.31 \"ls -lt ~/youtube-pipeline/logs/ | head -20\")",
+      "Bash(ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"ls -lt ~/youtube-pipeline/logs/ | head -20\")",
+      "Read(//c/Users/Tech-Lead/.ssh/**)",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"cat ~/youtube-pipeline/logs/pipeline_20260412_194127.log\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"crontab -l\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"grep -r 'PIPELINE\\\\|pipeline' /var/log/syslog 2>/dev/null | grep '$\\(date +%Y-%m-%d\\)' | tail -20; echo '---'; ls -la ~/youtube-pipeline/logs/; echo '---'; ls -la ~/youtube-pipeline/output/\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"crontab -l | sed 's|2>\\\\&$|2>\\\\&1|' | crontab -\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"crontab -l | tail -5\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"cd /home/ubuntu/youtube-pipeline && nohup /home/ubuntu/youtube-pipeline/venv/bin/python3 -u run_pipeline.py >> /home/ubuntu/youtube-pipeline/logs/pipeline_$\\(date +%Y%m%d\\)_manual.log 2>&1 &; echo \\\\\"PID: $!\\\\\"\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"cd /home/ubuntu/youtube-pipeline && nohup /home/ubuntu/youtube-pipeline/venv/bin/python3 -u run_pipeline.py >> /home/ubuntu/youtube-pipeline/logs/pipeline_20260413_manual.log 2>&1 & echo PID:\\\\$!\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"tail -f /home/ubuntu/youtube-pipeline/logs/pipeline_20260413_manual.log\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"sed -n '55,65p' /home/ubuntu/youtube-pipeline/scripts/generate_video.py\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"sed -i 's/low quality\\\\\",,/low quality\\\\\",/' /home/ubuntu/youtube-pipeline/scripts/generate_video.py\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"tail -30 /home/ubuntu/youtube-pipeline/logs/pipeline_20260413_manual.log\")",
+      "Bash(ssh -i \"H:/My Drive/Development/Claude/youtube/youtube_ubuntu.pem\" -o StrictHostKeyChecking=no ubuntu@129.226.215.31 \"tail -40 /home/ubuntu/youtube-pipeline/logs/pipeline_20260413_manual.log\")"
+    ]
+  }
+}
