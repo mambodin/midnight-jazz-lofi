@@ -29,7 +29,7 @@ from pick_thumbnail import pick_thumbnail
 from upload_youtube import upload_video
 
 # ── Config ────────────────────────────────────────────────────────────────────
-NUM_TRACKS    = 10       # tracks per video (~30 min at 3 min/track)
+NUM_TRACKS    = 20       # tracks per video (~60 min at 3 min/track)
 VIDEO_PRIVACY = "public" # set to "private" for testing
 BASE_DIR      = Path(os.path.expanduser('~/youtube-pipeline'))
 OUTPUT_DIR    = BASE_DIR / "output"
