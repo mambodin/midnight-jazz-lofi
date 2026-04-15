@@ -5,12 +5,18 @@ from pathlib import Path
 
 
 def get_duration(file_path):
-    result = subprocess.run([
-        "ffprobe", "-v", "quiet",
-        "-print_format", "json",
-        "-show_format", str(file_path)
-    ], capture_output=True, text=True)
-    info = json.loads(result.stdout)
+    try:
+        result = subprocess.run([
+            "ffprobe", "-v", "quiet",
+            "-print_format", "json",
+            "-show_format", str(file_path)
+        ], capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"ffprobe failed for {file_path}: {e.stderr.strip()}") from e
+    try:
+        info = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"ffprobe returned invalid JSON for {file_path}") from e
     return float(info["format"]["duration"])
 
 
@@ -32,6 +38,9 @@ def assemble_video(audio_path, video_clip_path, output_path="output/final_video.
     print(f"Video clip: {video_clip_path.name} ({video_duration:.1f}s)", flush=True)
     print(f"Output:     {output_path}", flush=True)
 
+    # Re-encode video (libx264) so we can cut at an exact frame rather than
+    # a keyframe boundary.  -stream_loop -1 loops the short Kling clip for the
+    # full audio duration.  yuv420p ensures broad player compatibility.
     cmd = [
         "ffmpeg", "-y",
         "-stream_loop", "-1",
@@ -39,7 +48,10 @@ def assemble_video(audio_path, video_clip_path, output_path="output/final_video.
         "-i", str(audio_path),
         "-map", "0:v",
         "-map", "1:a",
-        "-c:v", "copy",
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-crf", "23",
+        "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "192k",
         "-t", str(audio_duration),

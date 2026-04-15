@@ -1,0 +1,31 @@
+{
+  "api_params": {
+    "model_name": "kling-v1-6",
+    "negative_prompt": "camera movement, panning, zooming, tilting, shaking, handheld, dolly, tracking shot, crane shot, push in, pull out, orbit, arc shot, parallax, motion blur, unstable, wobble, drift, rotation, people, faces, text, watermark, blurry, low quality, scene change, cut, transition",
+    "cfg_scale": 0.5,
+    "mode": "std",
+    "duration": "5"
+  },
+  "scenes": [
+    {
+      "name": "Tokyo Alleyway",
+      "prompt": "still photograph of a dark rainy Tokyo alleyway at night, neon signs reflecting in wet cobblestone puddles, empty narrow street, dim orange lamplight, ABSOLUTELY STATIC CAMERA, fixed tripod shot, frozen composition, motionless frame, the ONLY motion is gentle rain particles falling and subtle neon sign flicker, everything else is perfectly still, cinematic still frame, no people, no camera movement whatsoever"
+    },
+    {
+      "name": "Vintage Jazz Bar",
+      "prompt": "still photograph of a dimly lit vintage jazz bar interior, empty wooden stage with upright piano and standing microphone, single amber spotlight, dark mahogany walls, ABSOLUTELY STATIC CAMERA, fixed tripod shot, frozen composition, motionless frame, the ONLY motion is slow cigarette smoke wisps drifting upward and faint spotlight flicker, everything else is perfectly still, cinematic still frame, no people, no camera movement whatsoever"
+    },
+    {
+      "name": "Neon Rooftop",
+      "prompt": "still photograph of a dark rain-soaked rooftop overlooking vast neon city at night, wet concrete reflecting city lights, lone empty wooden chair, ABSOLUTELY STATIC CAMERA, fixed tripod shot, frozen composition, motionless frame, the ONLY motion is soft rain falling and thin fog drifting slowly across the background, everything else is perfectly still, cinematic still frame, no people, no camera movement whatsoever"
+    },
+    {
+      "name": "Late Night Cafe",
+      "prompt": "still photograph of a late night cafe interior, warm amber light inside, empty table with coffee cup and open book, blurred neon city lights outside, ABSOLUTELY STATIC CAMERA, fixed tripod shot, frozen composition, motionless frame, the ONLY motion is rain droplets streaking slowly down the window glass and faint steam rising from the coffee cup, everything else is perfectly still, cinematic still frame, no people, no camera movement whatsoever"
+    },
+    {
+      "name": "Noir Detective Office",
+      "prompt": "still photograph of a 1940s noir detective office at night, single brass desk lamp casting warm light, venetian blind shadows on a dark window, whiskey glass on wooden desk, ABSOLUTELY STATIC CAMERA, fixed tripod shot, frozen composition, motionless frame, the ONLY motion is rain droplets on the window and faint curl of smoke from the lamp, everything else is perfectly still, cinematic still frame, no people, no camera movement whatsoever"
+    }
+  ]
+}

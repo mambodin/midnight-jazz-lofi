@@ -10,6 +10,7 @@ Scheduled via crontab:
 """
 import os
 import sys
+import shutil
 import random
 import logging
 from datetime import datetime
@@ -22,18 +23,21 @@ sys.path.insert(0, os.path.expanduser('~/youtube-pipeline/scripts'))
 
 from generate_metadata import generate_metadata
 from generate_music import generate_music_batch
-from assemble_audio import assemble_audio
+from assemble_audio import assemble_audio, get_duration
 from generate_video import generate_video
 from assemble_video import assemble_video
-from pick_thumbnail import pick_thumbnail
+from pick_thumbnail import pick_thumbnail, move_thumbnail_to_used
 from upload_youtube import upload_video
 
 # ── Config ────────────────────────────────────────────────────────────────────
-NUM_TRACKS    = 10       # tracks per video (~30 min at 3 min/track)
-VIDEO_PRIVACY = "public" # set to "private" for testing
+NUM_TRACKS    = 20       # tracks per video
+VIDEO_PRIVACY = "public" # must be one of: public, private, unlisted
 BASE_DIR      = Path(os.path.expanduser('~/youtube-pipeline'))
 OUTPUT_DIR    = BASE_DIR / "output"
 LOG_DIR       = BASE_DIR / "logs"
+
+assert VIDEO_PRIVACY in {"public", "private", "unlisted"}, \
+    f"Invalid VIDEO_PRIVACY: {VIDEO_PRIVACY!r} — must be public, private, or unlisted"
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 LOG_DIR.mkdir(exist_ok=True)
@@ -49,13 +53,28 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+MIN_FREE_BYTES = 2 * 1024 ** 3  # 2 GB
+
+
+def check_disk_space():
+    usage = shutil.disk_usage(BASE_DIR)
+    free_gb = usage.free / (1024 ** 3)
+    if usage.free < MIN_FREE_BYTES:
+        raise RuntimeError(
+            f"Insufficient disk space: {free_gb:.1f} GB free — need at least 2 GB"
+        )
+    log.info(f"Disk space OK: {free_gb:.1f} GB free")
+
 
 def cleanup_output():
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     for f in OUTPUT_DIR.glob("music/track_*.mp3"):
         f.unlink()
     for f in OUTPUT_DIR.glob("final_audio.mp3"):
         f.unlink()
     for f in OUTPUT_DIR.glob("final_video.mp4"):
+        f.unlink()
+    for f in OUTPUT_DIR.glob("video/*.mp4"):
         f.unlink()
     log.info("Cleaned up previous output files")
 
@@ -72,21 +91,13 @@ def run():
     log.info(f"Selected mood: {mood_idx}, scene: {scene_idx}")
 
     try:
-        # Step 1: Generate metadata
-        log.info("\n[1/7] Generating metadata...")
-        meta = generate_metadata(
-            mood_index=mood_idx,
-            scene_index=scene_idx,
-            duration_mins=int(NUM_TRACKS * 3)
-        )
-        log.info(f"Title: {meta['title']}")
-
-        # Step 2: Clean up
-        log.info("\n[2/7] Cleaning up previous run...")
+        # Step 1: Disk space + cleanup
+        log.info("\n[1/7] Pre-flight checks and cleanup...")
+        check_disk_space()
         cleanup_output()
 
-        # Step 3: Generate music
-        log.info(f"\n[3/7] Generating {NUM_TRACKS} music tracks...")
+        # Step 2: Generate music
+        log.info(f"\n[2/7] Generating {NUM_TRACKS} music tracks...")
         tracks = generate_music_batch(
             style_index=mood_idx,
             num_tracks=NUM_TRACKS,
@@ -94,15 +105,31 @@ def run():
         )
         if not tracks:
             raise RuntimeError("No tracks generated")
-        log.info(f"Generated {len(tracks)} tracks")
+        min_required = max(1, int(NUM_TRACKS * 0.8))
+        if len(tracks) < min_required:
+            raise RuntimeError(
+                f"Too many tracks failed: {len(tracks)}/{NUM_TRACKS} succeeded "
+                f"(minimum {min_required} required)"
+            )
+        log.info(f"Generated {len(tracks)}/{NUM_TRACKS} tracks")
 
-        # Step 4: Assemble audio
-        log.info("\n[4/7] Assembling audio...")
+        # Step 3: Assemble audio
+        log.info("\n[3/7] Assembling audio...")
         audio_path = assemble_audio(
             track_paths=tracks,
             output_path=str(OUTPUT_DIR / "final_audio.mp3")
         )
         log.info(f"Audio assembled: {audio_path}")
+
+        # Step 4: Generate metadata (uses real audio duration)
+        audio_duration_mins = int(get_duration(audio_path) / 60)
+        log.info(f"\n[4/7] Generating metadata ({audio_duration_mins} min)...")
+        meta = generate_metadata(
+            mood_index=mood_idx,
+            scene_index=scene_idx,
+            duration_mins=audio_duration_mins
+        )
+        log.info(f"Title: {meta['title']}")
 
         # Step 5: Generate video clip
         log.info("\n[5/7] Generating video clip...")
@@ -125,29 +152,38 @@ def run():
 
         # Step 7: Thumbnail + upload
         log.info("\n[7/7] Picking thumbnail and uploading...")
+        thumb_path = None
+        thumb_src  = None
         try:
-            thumb_path = pick_thumbnail(
+            thumb_path, thumb_src = pick_thumbnail(
                 title_line1=meta["short_title"],
                 title_line2=meta["scene_label"]
             )
             log.info(f"Thumbnail: {thumb_path}")
         except FileNotFoundError as e:
             log.warning(f"Thumbnail queue empty: {e}")
-            thumb_path = None
+
+        # Cap hashtags in description to 3 (YouTube topic hashtag limit)
+        hashtags = "\n".join(
+            f"#{t.replace(' ', '')}" for t in meta["tags"][:3]
+        )
+        description = meta["description"] + "\n\n" + hashtags
 
         video_id = upload_video(
             video_path=final_video,
             title=meta["title"],
-            description=meta["description"] + "\n\n" + "\n".join(
-                f"#{t.replace(' ', '')}" for t in meta["tags"]
-            ),
+            description=description,
             tags=meta["tags"],
             thumbnail_path=thumb_path,
-            category_id=meta.get("category_id", "10"),
+            category_id="10",
             privacy=VIDEO_PRIVACY
         )
 
-        elapsed = (datetime.now() - start).seconds // 60
+        # Only archive thumbnail after a confirmed successful upload
+        if thumb_src:
+            move_thumbnail_to_used(thumb_src)
+
+        elapsed = int((datetime.now() - start).total_seconds() // 60)
         log.info("\n" + "=" * 50)
         log.info("PIPELINE COMPLETE")
         log.info(f"Video ID:  {video_id}")

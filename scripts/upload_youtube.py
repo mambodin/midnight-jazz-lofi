@@ -7,6 +7,7 @@ load_dotenv(dotenv_path=os.path.expanduser('~/youtube-pipeline/.env'))
 
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
@@ -23,19 +24,37 @@ SCOPES = [
 ]
 
 
+def _save_token(creds):
+    """Write token atomically with restricted permissions."""
+    tmp = TOKEN_PATH + ".tmp"
+    with open(tmp, 'w') as f:
+        f.write(creds.to_json())
+    os.replace(tmp, TOKEN_PATH)
+    os.chmod(TOKEN_PATH, 0o600)
+
+
 def get_youtube_client():
     if not Path(TOKEN_PATH).exists():
-        print(f"ERROR: token.json not found at {TOKEN_PATH}")
-        print("Run get_token.py first")
+        print(f"ERROR: token.json not found at {TOKEN_PATH}", flush=True)
+        print("Run get_token.py first", flush=True)
         sys.exit(1)
 
     creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 
-    if creds.expired and creds.refresh_token:
-        print("Refreshing OAuth token...", flush=True)
-        creds.refresh(Request())
-        with open(TOKEN_PATH, 'w') as f:
-            f.write(creds.to_json())
+    if not creds.valid:
+        if creds.expired and creds.refresh_token:
+            print("Refreshing OAuth token...", flush=True)
+            try:
+                creds.refresh(Request())
+            except RefreshError as e:
+                print(f"ERROR: OAuth token refresh failed: {e}", flush=True)
+                print("Re-run get_token.py to generate a new token.", flush=True)
+                sys.exit(1)
+            _save_token(creds)
+        else:
+            print("ERROR: OAuth credentials are invalid and cannot be refreshed.", flush=True)
+            print("Re-run get_token.py to generate a new token.", flush=True)
+            sys.exit(1)
 
     return build('youtube', 'v3', credentials=creds)
 

@@ -14,28 +14,33 @@ KLING_ACCESS_KEY = os.getenv("KLING_ACCESS_KEY")
 KLING_SECRET_KEY = os.getenv("KLING_SECRET_KEY")
 BASE_URL         = "https://api-singapore.klingai.com"
 
-# Static camera prompts — no shake, locked off tripod
-SCENE_PROMPTS = [
-    "dark rainy Tokyo alleyway at night, neon signs reflecting in wet cobblestone puddles, empty narrow street, dim orange lamplight, gentle rain falling, STATIC CAMERA, locked off tripod shot, no camera movement, only rain particles moving, cinematic still frame, no people",
-    "dimly lit vintage jazz bar interior, empty wooden stage with upright piano and standing microphone, single amber spotlight, cigarette smoke wisps drifting slowly, dark mahogany walls, STATIC CAMERA, locked off tripod shot, no camera movement, only smoke drifting, no people",
-    "dark rain-soaked rooftop overlooking vast neon city at night, wet concrete reflecting city lights, thick fog, lone empty wooden chair, STATIC CAMERA, locked off tripod shot, no camera movement, only rain falling and fog drifting slowly, no people",
-    "late night cafe interior, rain streaking slowly down window glass, warm amber light inside, empty table with coffee cup and open book, blurred neon city lights outside, STATIC CAMERA, locked off tripod shot, no camera movement, only rain on glass moving, no people",
-    "1940s noir detective office at night, single brass desk lamp casting warm light, rain on dark window with venetian blind shadows, whiskey glass on wooden desk, STATIC CAMERA, locked off tripod shot, no camera movement, only rain on window moving, no people"
-]
+_config = json.loads((Path(__file__).parent.parent / "config" / "video_scenes.json").read_text())
+API_PARAMS = _config["api_params"]
+SCENES = _config["scenes"]
+SCENE_PROMPTS = [s["prompt"] for s in SCENES]
+
+# JWT cache — reuse tokens while they have >60s of validity remaining
+_jwt_cache = {"token": None, "exp": 0}
 
 
 def generate_jwt():
     now = int(time.time())
+    if _jwt_cache["token"] and _jwt_cache["exp"] - now > 60:
+        return _jwt_cache["token"]
+    exp = now + 1800
     payload = {
         "iss": KLING_ACCESS_KEY,
-        "exp": now + 1800,
+        "exp": exp,
         "nbf": now - 5
     }
-    return jwt.encode(
+    token = jwt.encode(
         payload, KLING_SECRET_KEY,
         algorithm="HS256",
         headers={"alg": "HS256", "typ": "JWT"}
     )
+    _jwt_cache["token"] = token
+    _jwt_cache["exp"]   = exp
+    return token
 
 
 def get_headers():
@@ -47,14 +52,7 @@ def get_headers():
 
 def create_video_task(scene_index):
     prompt = SCENE_PROMPTS[scene_index]
-    payload = {
-        "model_name": "kling-v1-6",
-        "prompt": prompt,
-        "negative_prompt": "camera movement, panning, zooming, tilting, shaking, handheld, dolly, tracking shot, motion blur, unstable, wobble, crane shot, people, faces, text, watermark, blurry, low quality",
-        "cfg_scale": 0.3,
-        "mode": "std",
-        "duration": "5"
-    }
+    payload = {**API_PARAMS, "prompt": prompt}
 
     print(f"\nSubmitting video task (scene {scene_index})...", flush=True)
     print(f"Prompt: {prompt[:80]}...", flush=True)
@@ -91,6 +89,11 @@ def poll_video_task(task_id, max_attempts=60, interval=10):
                 headers=get_headers(),
                 timeout=15
             )
+            if resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", 30))
+                print(f"Poll {attempt} — rate limited, waiting {retry_after}s", flush=True)
+                time.sleep(retry_after)
+                continue
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:
@@ -127,6 +130,12 @@ def generate_video(scene_index, output_dir="output/video"):
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
+    # Remove any stale clip from a previous failed run so we don't silently reuse it
+    out_path = out / f"scene_{scene_index}.mp4"
+    if out_path.exists():
+        out_path.unlink()
+        print(f"Removed stale clip: {out_path.name}", flush=True)
+
     task_id = create_video_task(scene_index)
     if not task_id:
         return None
@@ -146,7 +155,6 @@ def generate_video(scene_index, output_dir="output/video"):
         print(f"No URL in video: {videos[0]}", flush=True)
         return None
 
-    out_path = out / f"scene_{scene_index}.mp4"
     print("Downloading video...", flush=True)
     if download_video(video_url, out_path):
         return str(out_path)
