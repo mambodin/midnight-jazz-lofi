@@ -19,19 +19,28 @@ API_PARAMS = _config["api_params"]
 SCENES = _config["scenes"]
 SCENE_PROMPTS = [s["prompt"] for s in SCENES]
 
+# JWT cache — reuse tokens while they have >60s of validity remaining
+_jwt_cache = {"token": None, "exp": 0}
+
 
 def generate_jwt():
     now = int(time.time())
+    if _jwt_cache["token"] and _jwt_cache["exp"] - now > 60:
+        return _jwt_cache["token"]
+    exp = now + 1800
     payload = {
         "iss": KLING_ACCESS_KEY,
-        "exp": now + 1800,
+        "exp": exp,
         "nbf": now - 5
     }
-    return jwt.encode(
+    token = jwt.encode(
         payload, KLING_SECRET_KEY,
         algorithm="HS256",
         headers={"alg": "HS256", "typ": "JWT"}
     )
+    _jwt_cache["token"] = token
+    _jwt_cache["exp"]   = exp
+    return token
 
 
 def get_headers():
@@ -80,6 +89,11 @@ def poll_video_task(task_id, max_attempts=60, interval=10):
                 headers=get_headers(),
                 timeout=15
             )
+            if resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", 30))
+                print(f"Poll {attempt} — rate limited, waiting {retry_after}s", flush=True)
+                time.sleep(retry_after)
+                continue
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:
@@ -116,6 +130,12 @@ def generate_video(scene_index, output_dir="output/video"):
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
+    # Remove any stale clip from a previous failed run so we don't silently reuse it
+    out_path = out / f"scene_{scene_index}.mp4"
+    if out_path.exists():
+        out_path.unlink()
+        print(f"Removed stale clip: {out_path.name}", flush=True)
+
     task_id = create_video_task(scene_index)
     if not task_id:
         return None
@@ -135,7 +155,6 @@ def generate_video(scene_index, output_dir="output/video"):
         print(f"No URL in video: {videos[0]}", flush=True)
         return None
 
-    out_path = out / f"scene_{scene_index}.mp4"
     print("Downloading video...", flush=True)
     if download_video(video_url, out_path):
         return str(out_path)

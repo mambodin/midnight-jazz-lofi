@@ -5,6 +5,7 @@ Requires client_secret.json from Google Cloud Console.
 Usage:
     python3 get_token.py
 """
+import os
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 SCOPES = [
@@ -29,6 +30,7 @@ flow.fetch_token(code=code)
 
 with open('token.json', 'w') as f:
     f.write(flow.credentials.to_json())
+os.chmod('token.json', 0o600)
 
-print("\ntoken.json saved successfully!")
+print("\ntoken.json saved successfully! (permissions set to 600)")
 print("You only need to run this once.")

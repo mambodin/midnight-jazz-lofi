@@ -5,12 +5,18 @@ from pathlib import Path
 
 
 def get_duration(file_path):
-    result = subprocess.run([
-        "ffprobe", "-v", "quiet",
-        "-print_format", "json",
-        "-show_format", str(file_path)
-    ], capture_output=True, text=True)
-    info = json.loads(result.stdout)
+    try:
+        result = subprocess.run([
+            "ffprobe", "-v", "quiet",
+            "-print_format", "json",
+            "-show_format", str(file_path)
+        ], capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"ffprobe failed for {file_path}: {e.stderr.strip()}") from e
+    try:
+        info = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"ffprobe returned invalid JSON for {file_path}") from e
     return float(info["format"]["duration"])
 
 
@@ -29,12 +35,17 @@ def assemble_audio(track_paths, output_path="output/final_audio.mp3"):
 
     print(f"\nAssembling {len(track_paths)} tracks into {output_path}...", flush=True)
 
+    # Re-encode to a consistent format instead of copying — avoids glitches at
+    # boundaries caused by differing Suno codec parameters (sample rate, bitrate).
     cmd = [
         "ffmpeg", "-y",
         "-f", "concat",
         "-safe", "0",
         "-i", str(concat_file),
-        "-c", "copy",
+        "-c:a", "libmp3lame",
+        "-b:a", "192k",
+        "-ar", "44100",
+        "-ac", "2",
         str(output_path)
     ]
 

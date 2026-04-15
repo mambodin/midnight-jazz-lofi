@@ -36,6 +36,11 @@ def poll_until_complete(task_id: str, max_attempts: int = 60, interval: int = 10
                 params={"taskId": task_id},
                 timeout=15
             )
+            if resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", 30))
+                print(f"    Poll {attempt} — rate limited, waiting {retry_after}s")
+                time.sleep(retry_after)
+                continue
             resp.raise_for_status()
             body = resp.json()
         except Exception as e:
@@ -122,10 +127,14 @@ def generate_track(style_index: int, track_num: int, output_dir: Path) -> str | 
     # Use sourceAudioUrl (direct CDN) with audioUrl as fallback
     clip = suno_data[0]
     audio_url = clip.get("sourceAudioUrl") or clip.get("audioUrl")
-    duration = clip.get("duration", 0)
+    duration  = float(clip.get("duration", 0))
 
     if not audio_url:
         print(f"  No audio URL found in clip: {clip}")
+        return None
+
+    if duration < 60:
+        print(f"  Track too short ({duration:.1f}s < 60s) — skipping stub")
         return None
 
     print(f"  Duration: {duration:.1f}s — downloading...")
