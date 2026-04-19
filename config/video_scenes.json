@@ -10,33 +10,33 @@
     "mode": "std",
     "duration": "5",
     "cfg_scale": 0.3,
-    "negative_prompt": "camera movement, panning, zooming, tilting, shaking, handheld, dolly, tracking shot, people walking, person moving, hands moving, characters appearing, animals, objects flying, objects falling, scene change, cut, transition, teleport, morphing, warping, distortion, deformation, identity drift, text overlay, watermark, low quality, blur, compression artifacts"
+    "negative_prompt": "camera movement, panning, zooming, tilting, shaking, handheld, dolly, tracking shot, people walking, person moving, hands moving, characters appearing, animals, objects flying, objects falling, scene change, cut, transition, teleport, morphing, warping, distortion, deformation, identity drift, text overlay, watermark, low quality, blur, compression artifacts, rain falling, raindrops, smoke drift, fog motion, steam rising, mist drifting, water droplets, ripples, water motion, weather, precipitation, falling particles, leaves falling, dust falling"
   },
   "scenes": [
     {
       "name": "Tokyo Alleyway",
       "image_prompt": "Cinematic still photograph of a dark rainy Tokyo alleyway at night, neon signs reflecting in wet cobblestone puddles, empty narrow street, dim orange lamplight, deep shadows, atmospheric mist, no people, 21:9 ultrawide cinematic composition.",
-      "animation_prompt": "Static locked shot. Rain droplets shimmer on wet cobblestones, neon sign reflections gently rippling in puddles. Lamplight pulses faintly. Nothing else moves."
+      "animation_prompt": "locked‑off camera, tripod shot, studio setup, only the light sources animates."
     },
     {
       "name": "Vintage Jazz Bar",
       "image_prompt": "Cinematic still photograph of a dimly lit vintage jazz bar interior, empty wooden stage with upright piano and standing microphone, single amber spotlight, dark mahogany walls, deep shadows, no people, 21:9 ultrawide cinematic composition.",
-      "animation_prompt": "Static shot. Cigarette smoke drifts slowly across the amber spotlight. Spotlight intensity pulses gently. Empty stage and chairs do not move."
+      "animation_prompt": "locked‑off camera, tripod shot, studio setup, only the light sources animates."
     },
     {
       "name": "Neon Rooftop",
       "image_prompt": "Cinematic still photograph of a dark rain-soaked rooftop overlooking vast neon city at night, wet concrete reflecting city lights, lone empty wooden chair, low fog, atmospheric, no people, 21:9 ultrawide cinematic composition.",
-      "animation_prompt": "Static locked shot. Rain falls softly, neon glow from city below pulses gently through fog. Empty chair does not move."
+      "animation_prompt": "locked‑off camera, tripod shot, studio setup, only the light sources animates."
     },
     {
       "name": "Late Night Cafe",
       "image_prompt": "Cinematic still photograph of a late night cafe interior, warm amber light inside, empty table with coffee cup and open book, blurred neon city lights outside the rain-streaked window, no people, 21:9 ultrawide cinematic composition.",
-      "animation_prompt": "Static shot. Raindrops trail down the window, blurred city lights outside flicker softly. Coffee steam rises slowly. Book and cup remain still."
+      "animation_prompt": "locked‑off camera, tripod shot, studio setup, only the light sources animates."
     },
     {
       "name": "Noir Detective Office",
       "image_prompt": "Cinematic still photograph of a 1940s noir detective office at night, single brass desk lamp casting warm pool of light, venetian blind shadows on a dark window, whiskey glass and papers on a wooden desk, no people, 21:9 ultrawide cinematic composition.",
-      "animation_prompt": "Static locked shot. Desk lamp glow pulses warmly. Cigarette smoke drifts slowly across venetian blinds. Whiskey glass and papers do not move."
+      "animation_prompt": "locked‑off camera, tripod shot, studio setup, only the light sources animates."
     }
   ]
 }
