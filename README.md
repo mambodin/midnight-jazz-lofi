@@ -13,9 +13,9 @@ Fully automated AI-powered YouTube channel pipeline. Generates dark jazz lofi mu
 Each day at 9am the pipeline runs automatically and:
 
 1. **Generates metadata** — Claude API creates SEO-optimised title, description, and tags
-2. **Generates music** — Suno API creates 10 dark jazz lofi tracks (~30 min total)
+2. **Generates music** — Suno API creates 20 dark jazz lofi tracks (~60 min total)
 3. **Assembles audio** — FFmpeg concatenates tracks into one long MP3
-4. **Generates video** — Kling AI creates a 5-sec cinematic looping scene
+4. **Generates video** — Kling AI creates a 5-sec near-static cinematic still (no-motion prompt)
 5. **Assembles video** — FFmpeg loops the clip to match audio duration → final MP4
 6. **Picks thumbnail** — picks oldest image from Midjourney queue, adds text overlay
 7. **Uploads to YouTube** — YouTube Data API v3 uploads with all metadata
@@ -27,11 +27,10 @@ Each day at 9am the pipeline runs automatically and:
 | Tool | Purpose | Cost |
 |------|---------|------|
 | Suno Pro | AI music generation | $10/mo |
-| Kling Standard | AI video clip generation | $10/mo |
+| Kling AI API | AI video clip generation | ~$10/mo (paid pack — tier TBD) |
 | Midjourney Basic | Thumbnails (manual Sunday batch) | $10/mo |
 | Claude Haiku API | SEO metadata generation | ~$0.09/mo |
 | Tencent Lighthouse | VPS — Singapore region | $0.84/mo (yr1) |
-| n8n (self-hosted) | Workflow orchestration | Free |
 | FFmpeg | Audio/video assembly | Free |
 | YouTube Data API v3 | Upload automation | Free (10K units/day) |
 
@@ -168,12 +167,12 @@ view from inside late night cafe looking out rain-streaked window, warm interior
 
 | Step | Tool | Cost |
 |------|------|------|
-| 10 music tracks | Suno API | ~$0.02–0.24 |
+| 20 music tracks | Suno API | ~$0.04–0.48 |
 | 1 video clip | Kling API | ~$0.50 |
 | Metadata | Claude Haiku | ~$0.003 |
 | Thumbnail | Midjourney (manual) | ~$0.33 (amortised) |
 | VPS compute | Tencent Cloud | ~$0.17 |
-| **Total** | | **~$1.00–1.24/video** |
+| **Total** | | **~$1.04–1.48/video** |
 
 ---
 
