@@ -9,7 +9,9 @@ import requests
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.expanduser('~/youtube-pipeline/.env'))
+from pipeline_config import ENV_PATH
+
+load_dotenv(dotenv_path=ENV_PATH)
 
 PIAPI_KEY        = os.getenv("PIAPI_KEY")
 PIAPI_BASE_URL   = "https://api.piapi.ai"

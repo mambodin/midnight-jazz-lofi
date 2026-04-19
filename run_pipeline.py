@@ -17,9 +17,16 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.expanduser('~/youtube-pipeline/.env'))
+# Bootstrap: scripts/ on sys.path so pipeline_config (and its siblings) import
+sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
 
-sys.path.insert(0, os.path.expanduser('~/youtube-pipeline/scripts'))
+from pipeline_config import (
+    MODE, BASE_DIR, ENV_PATH, OUTPUT_DIR, LOG_DIR,
+    NUM_TRACKS, VIDEO_PRIVACY,
+    SKIP_UPLOAD, SKIP_THUMBNAIL,
+)
+
+load_dotenv(dotenv_path=ENV_PATH)
 
 from generate_metadata import generate_metadata
 from generate_music import generate_music_batch
@@ -28,13 +35,6 @@ from generate_video import generate_video
 from assemble_video import assemble_video
 from pick_thumbnail import pick_thumbnail, move_thumbnail_to_used
 from upload_youtube import upload_video
-
-# ── Config ────────────────────────────────────────────────────────────────────
-NUM_TRACKS    = int(os.getenv("NUM_TRACKS", "20"))   # tracks per video; env override for test runs
-VIDEO_PRIVACY = os.getenv("VIDEO_PRIVACY", "public") # one of: public, private, unlisted; env override for test runs
-BASE_DIR      = Path(os.path.expanduser('~/youtube-pipeline'))
-OUTPUT_DIR    = BASE_DIR / "output"
-LOG_DIR       = BASE_DIR / "logs"
 
 assert VIDEO_PRIVACY in {"public", "private", "unlisted"}, \
     f"Invalid VIDEO_PRIVACY: {VIDEO_PRIVACY!r} — must be public, private, or unlisted"
@@ -86,6 +86,7 @@ def run():
     log.info("=" * 50)
     log.info("MIDNIGHT JAZZ LOFI — DAILY PIPELINE STARTING")
     log.info(f"Run date: {start.strftime('%Y-%m-%d %H:%M:%S')}")
+    log.info(f"Mode:     {MODE} (skip_upload={SKIP_UPLOAD}, skip_thumbnail={SKIP_THUMBNAIL})")
     log.info("=" * 50)
 
     mood_idx  = random.randint(0, 4)
@@ -156,40 +157,51 @@ def run():
         log.info("\n[7/7] Picking thumbnail and uploading...")
         thumb_path = None
         thumb_src  = None
-        try:
-            thumb_path, thumb_src = pick_thumbnail(
-                title_line1=meta["short_title"],
-                title_line2=meta["scene_label"]
+        if SKIP_THUMBNAIL:
+            log.info("Thumbnail step skipped (test mode)")
+        else:
+            try:
+                thumb_path, thumb_src = pick_thumbnail(
+                    title_line1=meta["short_title"],
+                    title_line2=meta["scene_label"]
+                )
+                log.info(f"Thumbnail: {thumb_path}")
+            except FileNotFoundError as e:
+                log.warning(f"Thumbnail queue empty: {e}")
+
+        video_id = None
+        if SKIP_UPLOAD:
+            log.info("Upload step skipped (test mode)")
+            log.info(f"Local final video: {final_video}")
+        else:
+            # Cap hashtags in description to 3 (YouTube topic hashtag limit)
+            hashtags = "\n".join(
+                f"#{t.replace(' ', '')}" for t in meta["tags"][:3]
             )
-            log.info(f"Thumbnail: {thumb_path}")
-        except FileNotFoundError as e:
-            log.warning(f"Thumbnail queue empty: {e}")
+            description = meta["description"] + "\n\n" + hashtags
 
-        # Cap hashtags in description to 3 (YouTube topic hashtag limit)
-        hashtags = "\n".join(
-            f"#{t.replace(' ', '')}" for t in meta["tags"][:3]
-        )
-        description = meta["description"] + "\n\n" + hashtags
+            video_id = upload_video(
+                video_path=final_video,
+                title=meta["title"],
+                description=description,
+                tags=meta["tags"],
+                thumbnail_path=thumb_path,
+                category_id="10",
+                privacy=VIDEO_PRIVACY
+            )
 
-        video_id = upload_video(
-            video_path=final_video,
-            title=meta["title"],
-            description=description,
-            tags=meta["tags"],
-            thumbnail_path=thumb_path,
-            category_id="10",
-            privacy=VIDEO_PRIVACY
-        )
-
-        # Only archive thumbnail after a confirmed successful upload
-        if thumb_src:
-            move_thumbnail_to_used(thumb_src)
+            # Only archive thumbnail after a confirmed successful upload
+            if thumb_src:
+                move_thumbnail_to_used(thumb_src)
 
         elapsed = int((datetime.now() - start).total_seconds() // 60)
         log.info("\n" + "=" * 50)
         log.info("PIPELINE COMPLETE")
-        log.info(f"Video ID:  {video_id}")
-        log.info(f"URL:       https://www.youtube.com/watch?v={video_id}")
+        if video_id:
+            log.info(f"Video ID:  {video_id}")
+            log.info(f"URL:       https://www.youtube.com/watch?v={video_id}")
+        else:
+            log.info(f"Local file: {final_video} (upload skipped)")
         log.info(f"Duration:  {elapsed} minutes")
         log.info("=" * 50)
 

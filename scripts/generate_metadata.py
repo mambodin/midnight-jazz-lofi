@@ -5,7 +5,9 @@ import time
 import anthropic
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.expanduser('~/youtube-pipeline/.env'))
+from pipeline_config import ENV_PATH, MOCK_METADATA
+
+load_dotenv(dotenv_path=ENV_PATH)
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -84,6 +86,10 @@ def _build_fallback(mood_index, scene_index, duration_mins):
 
 
 def generate_metadata(mood_index, scene_index, duration_mins=90, max_retries=3):
+    if MOCK_METADATA:
+        print("  Metadata mocked (test mode) — using fallback template", flush=True)
+        return _build_fallback(mood_index, scene_index, duration_mins)
+
     mood  = MOODS[mood_index]
     scene = SCENES[scene_index]
 

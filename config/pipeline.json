@@ -1,0 +1,23 @@
+{
+  "mode": "production",
+  "modes": {
+    "production": {
+      "num_tracks": 20,
+      "video_privacy": "public",
+      "skip_upload": false,
+      "skip_thumbnail": false,
+      "mock_music": false,
+      "mock_metadata": false,
+      "base_dir": "~/youtube-pipeline"
+    },
+    "test": {
+      "num_tracks": 1,
+      "video_privacy": "private",
+      "skip_upload": true,
+      "skip_thumbnail": true,
+      "mock_music": true,
+      "mock_metadata": true,
+      "base_dir": "."
+    }
+  }
+}

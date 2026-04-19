@@ -4,12 +4,31 @@ import shutil
 import subprocess
 from pathlib import Path
 
-BASE_DIR  = Path(os.path.expanduser('~/youtube-pipeline'))
+from pipeline_config import BASE_DIR
+
 QUEUE_DIR = BASE_DIR / "thumbnails" / "queue"
 USED_DIR  = BASE_DIR / "thumbnails" / "used"
 OUT_PATH  = BASE_DIR / "thumbnails" / "current_thumb.jpg"
-FONT_PATH = "/usr/share/fonts/truetype/bebas-neue/BebasNeue-Regular.ttf"
 MIN_QUEUE = 5
+
+
+def _resolve_font_path():
+    """Try VPS Bebas Neue, then env override, then a Windows fallback. Raise if none exist.
+    Resolved lazily inside pick_thumbnail() so the module imports cleanly even when no
+    font is available (e.g. test mode on Windows where the upload step is skipped)."""
+    candidates = [
+        os.getenv("THUMBNAIL_FONT_PATH"),
+        "/usr/share/fonts/truetype/bebas-neue/BebasNeue-Regular.ttf",
+        "C:/Windows/Fonts/arialbd.ttf",
+    ]
+    for c in candidates:
+        if c and Path(c).exists():
+            return c
+    raise FileNotFoundError(
+        "No usable font for thumbnail overlay. "
+        "Install Bebas Neue at /usr/share/fonts/truetype/bebas-neue/ "
+        "or set THUMBNAIL_FONT_PATH."
+    )
 
 
 def _sanitize_drawtext(text):
@@ -43,14 +62,15 @@ def pick_thumbnail(title_line1="MIDNIGHT JAZZ", title_line2="LOFI BEATS"):
     src   = queue_files[0]
     line1 = _sanitize_drawtext(title_line1)
     line2 = _sanitize_drawtext(title_line2)
+    font_path = _resolve_font_path()
 
     drawtext = (
-        f"drawtext=fontfile={FONT_PATH}:"
+        f"drawtext=fontfile={font_path}:"
         f"text='{line1}':"
         f"fontsize=68:fontcolor=white:"
         f"x=60:y=h-155:"
         f"shadowcolor=black@0.7:shadowx=2:shadowy=2,"
-        f"drawtext=fontfile={FONT_PATH}:"
+        f"drawtext=fontfile={font_path}:"
         f"text='{line2}':"
         f"fontsize=38:fontcolor=white@0.85:"
         f"x=60:y=h-90:"

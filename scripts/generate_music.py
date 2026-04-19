@@ -2,11 +2,14 @@ import os
 import time
 import json
 import random
+import subprocess
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+from pipeline_config import ENV_PATH, MOCK_MUSIC
+
+load_dotenv(dotenv_path=ENV_PATH)
 
 SUNO_API_KEY = os.getenv("SUNO_API_KEY")
 SUNO_CALLBACK_URL = os.getenv("SUNO_CALLBACK_URL")
@@ -145,6 +148,25 @@ def generate_track(style_index: int, track_num: int, output_dir: Path) -> str | 
     return None
 
 
+def _generate_mock_track(track_num: int, output_dir: Path) -> str | None:
+    """Test-mode replacement for the Suno API: writes a 90s 440Hz sine tone via FFmpeg."""
+    out_path = output_dir / f"track_{track_num:02d}.mp3"
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi",
+        "-i", "sine=frequency=440:duration=90",
+        "-c:a", "libmp3lame", "-q:a", "5",
+        str(out_path)
+    ]
+    print(f"  Track {track_num} — mocked sine tone (test mode)")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  FFmpeg mock failed: {result.stderr[-300:]}")
+        return None
+    print(f"    Wrote {out_path.name} (90s 440Hz)")
+    return str(out_path)
+
+
 def generate_music_batch(style_index: int, num_tracks: int = 8,
                          output_dir: str = "output/music") -> list:
     """Generate a full batch of tracks. Returns list of file paths."""
@@ -152,17 +174,23 @@ def generate_music_batch(style_index: int, num_tracks: int = 8,
     out.mkdir(parents=True, exist_ok=True)
 
     print(f"\nGenerating {num_tracks} track(s)")
-    print(f"Style: {MUSIC_STYLES[style_index]['style']}")
+    if MOCK_MUSIC:
+        print("Mode:  test (mocked sine tones — Suno API skipped)")
+    else:
+        print(f"Style: {MUSIC_STYLES[style_index]['style']}")
     print(f"Output: {out}\n")
 
     tracks = []
     for i in range(1, num_tracks + 1):
-        path = generate_track(style_index, i, out)
+        if MOCK_MUSIC:
+            path = _generate_mock_track(i, out)
+        else:
+            path = generate_track(style_index, i, out)
         if path:
             tracks.append(path)
         else:
             print(f"  Track {i} failed — continuing")
-        if i < num_tracks:
+        if i < num_tracks and not MOCK_MUSIC:
             time.sleep(3)
 
     print(f"\nDone: {len(tracks)}/{num_tracks} tracks saved")
