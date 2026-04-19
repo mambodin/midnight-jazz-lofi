@@ -123,12 +123,12 @@ def poll_image_task(task_id, max_attempts=60, interval=10):
             print(f"Image poll {attempt} error: {e}", flush=True)
             continue
 
-        status = data.get("data", {}).get("status", "Unknown")
+        status = (data.get("data", {}).get("status") or "").lower()
         print(f"Image poll {attempt}/{max_attempts} — {status}", flush=True)
 
-        if status == "Completed":
+        if status == "completed":
             return data["data"]
-        if status == "Failed":
+        if status in ("failed", "error"):
             print(f"Image task failed: {data}", flush=True)
             return None
 
