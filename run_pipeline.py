@@ -30,8 +30,8 @@ from pick_thumbnail import pick_thumbnail, move_thumbnail_to_used
 from upload_youtube import upload_video
 
 # ── Config ────────────────────────────────────────────────────────────────────
-NUM_TRACKS    = 20       # tracks per video
-VIDEO_PRIVACY = "public" # must be one of: public, private, unlisted
+NUM_TRACKS    = int(os.getenv("NUM_TRACKS", "20"))   # tracks per video; env override for test runs
+VIDEO_PRIVACY = os.getenv("VIDEO_PRIVACY", "public") # one of: public, private, unlisted; env override for test runs
 BASE_DIR      = Path(os.path.expanduser('~/youtube-pipeline'))
 OUTPUT_DIR    = BASE_DIR / "output"
 LOG_DIR       = BASE_DIR / "logs"
@@ -75,6 +75,8 @@ def cleanup_output():
     for f in OUTPUT_DIR.glob("final_video.mp4"):
         f.unlink()
     for f in OUTPUT_DIR.glob("video/*.mp4"):
+        f.unlink()
+    for f in OUTPUT_DIR.glob("video/*.png"):
         f.unlink()
     log.info("Cleaned up previous output files")
 
