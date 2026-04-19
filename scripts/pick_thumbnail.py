@@ -36,33 +36,45 @@ def _sanitize_drawtext(text):
     return re.sub(r"[^A-Z0-9 ]", "", text.upper())
 
 
-def pick_thumbnail(title_line1="MIDNIGHT JAZZ", title_line2="LOFI BEATS"):
+def pick_thumbnail(title_line1="MIDNIGHT JAZZ", title_line2="LOFI BEATS", source_path=None):
     """
-    Pick oldest PNG from queue, add Bebas Neue text overlay, save as JPEG.
+    Add Bebas Neue text overlay to a source image, save as JPEG.
 
-    Returns (rendered_thumb_path, source_png_path).
-    The source PNG is NOT moved — caller must move it to thumbnails/used/
-    after confirming upload succeeded.
+    If source_path is provided (e.g. the Flux still from generate_video), use it
+    directly. Otherwise fall back to the oldest PNG in thumbnails/queue/ (legacy
+    Midjourney workflow).
 
-    Raises FileNotFoundError if queue is empty.
+    Returns (rendered_thumb_path, source_to_archive). The second value is the
+    queue PNG path when sourced from the queue (caller archives it after a
+    successful upload via move_thumbnail_to_used). When source_path is provided
+    externally, the second value is None — nothing to archive.
+
+    Raises FileNotFoundError if no source available.
     """
     USED_DIR.mkdir(parents=True, exist_ok=True)
-    queue_files = sorted(QUEUE_DIR.glob("*.png"))
 
-    if not queue_files:
-        raise FileNotFoundError(
-            "Thumbnail queue is empty! "
-            "Upload Midjourney images to thumbnails/queue/ "
-            "using: scp thumb_*.png ubuntu@YOUR_VPS:~/youtube-pipeline/thumbnails/queue/"
-        )
+    if source_path is not None:
+        src = Path(source_path)
+        if not src.exists():
+            raise FileNotFoundError(f"Thumbnail source not found: {src}")
+        archive_src = None
+    else:
+        queue_files = sorted(QUEUE_DIR.glob("*.png"))
+        if not queue_files:
+            raise FileNotFoundError(
+                "Thumbnail queue is empty! "
+                "Upload Midjourney images to thumbnails/queue/ "
+                "using: scp thumb_*.png ubuntu@YOUR_VPS:~/youtube-pipeline/thumbnails/queue/"
+            )
+        if len(queue_files) <= MIN_QUEUE:
+            print(f"WARNING: Only {len(queue_files)} thumbnails left — generate more soon!", flush=True)
+        src = queue_files[0]
+        archive_src = str(src)
 
-    if len(queue_files) <= MIN_QUEUE:
-        print(f"WARNING: Only {len(queue_files)} thumbnails left — generate more soon!", flush=True)
-
-    src   = queue_files[0]
     line1 = _sanitize_drawtext(title_line1)
     line2 = _sanitize_drawtext(title_line2)
-    font_path = _resolve_font_path()
+    # Escape colons in font path for ffmpeg drawtext (Windows "C:/" → "C\:/")
+    font_path = _resolve_font_path().replace(":", r"\:")
 
     drawtext = (
         f"drawtext=fontfile={font_path}:"
@@ -95,7 +107,7 @@ def pick_thumbnail(title_line1="MIDNIGHT JAZZ", title_line2="LOFI BEATS"):
         raise RuntimeError("Thumbnail generation failed")
 
     print(f"Thumbnail ready: {OUT_PATH.name} (source: {src.name})", flush=True)
-    return str(OUT_PATH), str(src)
+    return str(OUT_PATH), archive_src
 
 
 def move_thumbnail_to_used(source_path):

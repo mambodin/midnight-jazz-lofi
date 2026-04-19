@@ -161,13 +161,16 @@ def run():
             log.info("Thumbnail step skipped (test mode)")
         else:
             try:
+                # Use the Flux still as the thumbnail source (with text overlay)
+                still_source = OUTPUT_DIR / "video" / f"scene_{scene_idx}_still.png"
                 thumb_path, thumb_src = pick_thumbnail(
                     title_line1=meta["short_title"],
-                    title_line2=meta["scene_label"]
+                    title_line2=meta["scene_label"],
+                    source_path=str(still_source)
                 )
                 log.info(f"Thumbnail: {thumb_path}")
             except FileNotFoundError as e:
-                log.warning(f"Thumbnail queue empty: {e}")
+                log.warning(f"Thumbnail source missing: {e}")
 
         video_id = None
         if SKIP_UPLOAD:
