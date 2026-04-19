@@ -3,7 +3,9 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.expanduser('~/youtube-pipeline/.env'))
+from pipeline_config import ENV_PATH, BASE_DIR
+
+load_dotenv(dotenv_path=ENV_PATH)
 
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
@@ -12,10 +14,10 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 
-TOKEN_PATH  = os.path.expanduser('~/youtube-pipeline/token.json')
+TOKEN_PATH  = str(BASE_DIR / "token.json")
 SECRET_PATH = os.getenv(
     'YOUTUBE_CLIENT_SECRET_PATH',
-    os.path.expanduser('~/youtube-pipeline/client_secret.json')
+    str(BASE_DIR / "client_secret.json")
 )
 
 SCOPES = [

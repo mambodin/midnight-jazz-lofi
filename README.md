@@ -101,6 +101,51 @@ python3 -u run_pipeline.py
 
 ---
 
+## Running locally as a test
+
+The pipeline can run on your local machine (Windows / macOS / Linux) without
+touching the VPS or YouTube channel. Useful for iterating on prompts, image
+generation, and i2v animation without burning a 30 min round-trip.
+
+**Test mode:** 1 mocked Suno track (FFmpeg sine tone), 1 real PiAPI Flux still,
+1 real Kling i2v clip, 1 mocked Anthropic metadata, no thumbnail picking, no
+YouTube upload. Cost per run: ~$0.0015 (Flux) + 10 Kling video credits.
+
+### Local prereqs
+
+```bash
+# 1. Copy env template to repo root and fill in real keys
+cp .env.example .env
+# Edit .env — only PIAPI_KEY and KLING_ACCESS_KEY/KLING_SECRET_KEY are
+# strictly required for a test run; the others are mocked.
+
+# 2. Install dependencies (Python 3.11+, FFmpeg in PATH)
+python3 -m venv venv
+source venv/bin/activate         # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+### Switch to test mode
+
+Either edit `config/pipeline.json` and change `"mode": "production"` →
+`"mode": "test"`, or use the env override (preferred — no file change):
+
+```bash
+PIPELINE_MODE=test python3 -u run_pipeline.py
+```
+
+Outputs land at the repo root: `output/music/`, `output/video/`,
+`output/final_audio.mp3`, `output/final_video.mp4`, `logs/pipeline_*.log`
+(all gitignored).
+
+### Cleanup
+
+```bash
+rm -rf output/ logs/
+```
+
+---
+
 ## Folder structure
 
 ```
